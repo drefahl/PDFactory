@@ -8,6 +8,7 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod"
+import { env } from "./config/env.config"
 import { errorHandler } from "./config/errorHandler.config"
 
 export async function createServer() {
@@ -28,7 +29,7 @@ export async function createServer() {
       },
       servers: [
         {
-          url: "http://localhost:3000",
+          url: `http${env.NODE_ENV === "production" ? "s" : ""}://${env.HOST}:${env.PORT}`,
         },
       ],
     },

@@ -1,4 +1,5 @@
 import { createServer } from "./app"
+import { env } from "./config/env.config"
 import { registerRoutes } from "./routes/index.routes"
 
 const start = async () => {
@@ -7,7 +8,7 @@ const start = async () => {
     await registerRoutes(app)
     await app.ready()
 
-    await app.listen({ port: 3000 })
+    await app.listen({ port: env.PORT, host: env.HOST })
 
     console.log(`Server running at ${app.server.address()}`)
   } catch (err) {
