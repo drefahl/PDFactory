@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify"
 import { pdfRoutes } from "./pdf.routes"
 
-export async function registerRoutes(app: FastifyInstance) {
+export function registerRoutes(app: FastifyInstance) {
   app.register(
     async (fastifyInstance) => {
       fastifyInstance.register(pdfRoutes, { prefix: "/pdf" })

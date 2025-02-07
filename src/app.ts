@@ -11,6 +11,7 @@ import {
 import { env } from "./config/env.config"
 import { errorHandler } from "./config/errorHandler.config"
 import { envToLogger } from "./config/logger.config"
+import { registerRoutes } from "./routes/index.routes"
 
 export async function createServer() {
   const app = fastify({
@@ -42,6 +43,11 @@ export async function createServer() {
 
   // Error Handling
   app.setErrorHandler(errorHandler)
+
+  // Routes
+  registerRoutes(app)
+
+  await app.ready()
 
   return app
 }
