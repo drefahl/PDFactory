@@ -10,10 +10,11 @@ import {
 } from "fastify-type-provider-zod"
 import { env } from "./config/env.config"
 import { errorHandler } from "./config/errorHandler.config"
+import { envToLogger } from "./config/logger.config"
 
 export async function createServer() {
   const app = fastify({
-    logger: true,
+    logger: envToLogger[env.NODE_ENV] ?? true,
   }).withTypeProvider<ZodTypeProvider>()
 
   // Compilers
