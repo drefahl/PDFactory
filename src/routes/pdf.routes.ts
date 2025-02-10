@@ -1,8 +1,7 @@
 import { PdfController } from "@/controllers/pdf.controller"
-import { GeneratePdfFromUrlSchema } from "@/schemas/pdf.schema"
+import { GeneratePdfFromUrlSchema, QueryStringPdfFromHtmlSchema } from "@/schemas/pdf.schema"
 import { PdfService } from "@/services/pdf.services"
 import type { FastifyInstance } from "fastify"
-import { z } from "zod"
 
 export async function pdfRoutes(app: FastifyInstance) {
   const pdfService = new PdfService()
@@ -15,10 +14,10 @@ export async function pdfRoutes(app: FastifyInstance) {
     {
       schema: {
         consumes: ["multipart/form-data"],
-        querystring: z.object({ options: z.any().optional() }),
+        querystring: QueryStringPdfFromHtmlSchema,
       },
     },
-    pdfController.generatePdfByHTML,
+    pdfController.generatePdfByHTML.bind(pdfController),
   )
 
   app.post(
@@ -29,7 +28,7 @@ export async function pdfRoutes(app: FastifyInstance) {
         body: GeneratePdfFromUrlSchema,
       },
     },
-    pdfController.generatePdfByUrl,
+    pdfController.generatePdfByUrl.bind(pdfController),
   )
 
   app.addHook("onClose", async () => {

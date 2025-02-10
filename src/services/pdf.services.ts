@@ -1,3 +1,5 @@
+import { ValidationError } from "@/errors/ValidationError"
+import { isValidHtml } from "@/lib/utils/html.utils"
 import { type Browser, type PDFOptions, launch } from "puppeteer"
 import z from "zod"
 
@@ -16,17 +18,24 @@ export class PdfService {
     const htmlSchema = z.string()
     htmlSchema.parse(html)
 
+    if (!isValidHtml(html)) {
+      throw new ValidationError("Invalid HTML content")
+    }
+
     const page = await this.browser.newPage()
-    await page.setContent(html, { waitUntil: "networkidle0" })
+    try {
+      await page.setContent(html, { waitUntil: "networkidle0" })
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      ...options,
-    })
+      const pdf = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        ...options,
+      })
 
-    await page.close()
-    return pdf
+      return pdf
+    } finally {
+      await page.close()
+    }
   }
 
   async generatePdfFromUrl(url: string, options?: PDFOptions) {
@@ -36,16 +45,19 @@ export class PdfService {
     urlSchema.parse(url)
 
     const page = await this.browser.newPage()
-    await page.goto(url, { waitUntil: "networkidle0" })
+    try {
+      await page.goto(url, { waitUntil: "networkidle0" })
 
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      ...options,
-    })
+      const pdf = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        ...options,
+      })
 
-    await page.close()
-    return pdf
+      return pdf
+    } finally {
+      await page.close()
+    }
   }
 
   async close() {
