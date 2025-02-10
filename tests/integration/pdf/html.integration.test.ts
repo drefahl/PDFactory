@@ -6,10 +6,17 @@ import request from "supertest"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 let app: FastifyInstance
+let authToken: string
 
 describe("PDF API Integration Tests", () => {
   beforeAll(async () => {
     app = await createServer()
+
+    const loginResponse = await request(app.server)
+      .post("/api/auth/login")
+      .send({ username: "admin", password: "admin" })
+
+    authToken = loginResponse.body.token
   })
 
   afterAll(async () => {
@@ -25,13 +32,14 @@ describe("PDF API Integration Tests", () => {
   })
 
   describe("POST /api/pdf/html", () => {
-    it("should generate PDF from valid HTML file", async () => {
+    it("should generate PDF from valid HTML file when authenticated", async () => {
       const customName = "test-custom"
       const htmlContent = "<html><body><h1>Hello, PDF!</h1></body></html>"
       const htmlBuffer = Buffer.from(htmlContent, "utf-8")
 
       const response = await request(app.server)
         .post("/api/pdf/html")
+        .set("Authorization", `Bearer ${authToken}`)
         .query({ name: customName })
         .attach("file", htmlBuffer, { filename: "test.html", contentType: "text/html" })
 
@@ -45,8 +53,7 @@ describe("PDF API Integration Tests", () => {
     })
 
     it("should return 400 when file is missing", async () => {
-      const response = await request(app.server).post("/api/pdf/html")
-
+      const response = await request(app.server).post("/api/pdf/html").set("Authorization", `Bearer ${authToken}`)
       expect(response.status).toBe(500)
       expect(response.body.message).toContain("multipart")
     })
@@ -54,6 +61,7 @@ describe("PDF API Integration Tests", () => {
     it("should return 400 when HTML content is empty", async () => {
       const response = await request(app.server)
         .post("/api/pdf/html")
+        .set("Authorization", `Bearer ${authToken}`)
         .attach("file", Buffer.from("", "utf-8"), { filename: "test.html", contentType: "text/html" })
 
       expect(response.status).toBe(400)
@@ -63,6 +71,7 @@ describe("PDF API Integration Tests", () => {
     it("should return 400 when HTML content is invalid", async () => {
       const response = await request(app.server)
         .post("/api/pdf/html")
+        .set("Authorization", `Bearer ${authToken}`)
         .attach("file", Buffer.from("invalid-html", "utf-8"), { filename: "test.html", contentType: "text/html" })
 
       expect(response.status).toBe(400)
@@ -73,10 +82,24 @@ describe("PDF API Integration Tests", () => {
       const htmlContent = "<html><body><p>Test</p></body></html>"
       const response = await request(app.server)
         .post("/api/pdf/html")
+        .set("Authorization", `Bearer ${authToken}`)
         .attach("file", Buffer.from(htmlContent, "utf-8"), { filename: "test.txt", contentType: "text/plain" })
 
       expect(response.status).toBe(400)
       expect(response.body.message).toBe("Only HTML files are allowed")
+    })
+
+    it("should return 401 when not authenticated", async () => {
+      const customName = "test-no-auth"
+      const htmlContent = "<html><body><h1>Hello, PDF!</h1></body></html>"
+      const htmlBuffer = Buffer.from(htmlContent, "utf-8")
+
+      const response = await request(app.server)
+        .post("/api/pdf/html")
+        .query({ name: customName })
+        .attach("file", htmlBuffer, { filename: "test.html", contentType: "text/html" })
+
+      expect(response.status).toBe(401)
     })
   })
 })

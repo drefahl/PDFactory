@@ -1,3 +1,4 @@
+import fastifyJwt from "@fastify/jwt"
 import { fastifyMultipart } from "@fastify/multipart"
 import { fastify } from "fastify"
 import { type ZodTypeProvider, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod"
@@ -19,6 +20,7 @@ export async function createServer() {
   // Plugins
   swaggerConfig(app)
   app.register(fastifyMultipart)
+  app.register(fastifyJwt, { secret: env.JWT_SECRET, sign: { algorithm: "HS256", expiresIn: "10m" } })
 
   // Error Handling
   app.setErrorHandler(errorHandler)
