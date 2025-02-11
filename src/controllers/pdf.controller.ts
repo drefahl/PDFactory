@@ -27,9 +27,11 @@ export class PdfController {
         return reply.code(400).send({ message: "HTML content is required" })
       }
 
+      const session = (await request.jwtDecode()) as { id: number }
+
       const { options, name } = request.query
       const pdf = await this.pdfService.generatePdfFromHtml(html, options)
-      const { fileName } = await savePdf(pdf, name)
+      const { fileName } = await savePdf(pdf, session.id, name)
 
       return reply
         .header("Content-Type", "application/pdf")
@@ -54,8 +56,10 @@ export class PdfController {
     try {
       const { url, options, name } = request.body as { url: string; options?: PDFOptions; name?: string }
 
+      const session = (await request.jwtDecode()) as { id: number }
+
       const pdf = await this.pdfService.generatePdfFromUrl(url, options)
-      const { fileName } = await savePdf(pdf, name)
+      const { fileName } = await savePdf(pdf, session.id, name)
 
       return reply
         .header("Content-Type", "application/pdf")

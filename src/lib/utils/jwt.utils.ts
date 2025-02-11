@@ -1,5 +1,5 @@
 import { env } from "@/config/env.config"
-import { SignJWT, jwtVerify } from "jose"
+import { SignJWT, decodeJwt, jwtVerify } from "jose"
 
 const secret = new TextEncoder().encode(env.JWT_SECRET)
 
@@ -15,4 +15,8 @@ export async function verifyToken(token: string) {
   const { payload } = await jwtVerify(token, secret)
 
   return payload as TokenPayload
+}
+
+export function decodeToken(token: string) {
+  return decodeJwt(token) as TokenPayload
 }

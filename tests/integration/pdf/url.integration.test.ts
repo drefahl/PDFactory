@@ -1,12 +1,14 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createServer } from "@/app"
+import { decodeToken } from "@/lib/utils/jwt.utils"
 import type { FastifyInstance } from "fastify"
 import request from "supertest"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 let app: FastifyInstance
 let authToken: string
+let session: { id: number }
 
 describe("PDF URL Integration Tests", () => {
   beforeAll(async () => {
@@ -17,11 +19,12 @@ describe("PDF URL Integration Tests", () => {
       .send({ username: "admin", password: "admin" })
 
     authToken = loginResponse.body.token
+    session = decodeToken(authToken)
   })
 
   afterAll(async () => {
     await app.close()
-    const tempDir = path.join(process.cwd(), "tmp")
+    const tempDir = path.join(process.cwd(), "tmp", session.id.toString())
     if (fs.existsSync(tempDir)) {
       const files = fs.readdirSync(tempDir)
       for (const file of files) {
@@ -40,7 +43,7 @@ describe("PDF URL Integration Tests", () => {
     expect(response.status).toBe(200)
     expect(response.headers["content-type"]).toBe("application/pdf")
 
-    const filePath = path.join(process.cwd(), "tmp", "example.pdf")
+    const filePath = path.join(process.cwd(), "tmp", session.id.toString(), "example.pdf")
 
     expect(fs.existsSync(filePath)).toBe(true)
   })

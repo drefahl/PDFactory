@@ -1,12 +1,14 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createServer } from "@/app"
+import { decodeToken } from "@/lib/utils/jwt.utils"
 import type { FastifyInstance } from "fastify"
 import request from "supertest"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 let app: FastifyInstance
 let authToken: string
+let session: { id: number }
 
 describe("PDF API Integration Tests", () => {
   beforeAll(async () => {
@@ -17,12 +19,13 @@ describe("PDF API Integration Tests", () => {
       .send({ username: "admin", password: "admin" })
 
     authToken = loginResponse.body.token
+    session = decodeToken(authToken)
   })
 
   afterAll(async () => {
     await app.close()
     const projectRoot = process.cwd()
-    const tempDir = path.join(projectRoot, "tmp")
+    const tempDir = path.join(projectRoot, "tmp", session.id.toString())
     if (fs.existsSync(tempDir)) {
       const files = fs.readdirSync(tempDir)
       for (const file of files) {
@@ -47,7 +50,7 @@ describe("PDF API Integration Tests", () => {
       expect(response.headers["content-type"]).toBe("application/pdf")
 
       const projectRoot = process.cwd()
-      const tempFilePath = path.join(projectRoot, "tmp", `${customName}.pdf`)
+      const tempFilePath = path.join(projectRoot, "tmp", session.id.toString(), `${customName}.pdf`)
 
       expect(fs.existsSync(tempFilePath)).toBe(true)
     })
