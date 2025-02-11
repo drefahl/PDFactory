@@ -1,5 +1,5 @@
 import { PdfController } from "@/controllers/pdf.controller"
-import { GeneratePdfFromUrlSchema, QueryStringPdfFromHtmlSchema } from "@/schemas/pdf.schema"
+import { GeneratePdfFromUrlSchema, GetPdfSchema, QueryStringPdfFromHtmlSchema } from "@/schemas/pdf.schema"
 import { PdfService } from "@/services/pdf.services"
 import type { FastifyInstance } from "fastify"
 
@@ -29,6 +29,16 @@ export async function pdfRoutes(app: FastifyInstance) {
       },
     },
     pdfController.generatePdfByUrl.bind(pdfController),
+  )
+
+  app.get(
+    "/:fileName",
+    {
+      schema: {
+        params: GetPdfSchema,
+      },
+    },
+    pdfController.getPdf.bind(pdfController),
   )
 
   app.addHook("onClose", async () => {

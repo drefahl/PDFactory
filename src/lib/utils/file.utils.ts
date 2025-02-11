@@ -16,3 +16,9 @@ export async function savePdf(buffer: Uint8Array, id: number, name?: string) {
 
   return { fileName, filePath }
 }
+
+export async function getPdfPath(id: number, fileName: string) {
+  const filePath = join(OUTPUT_DIR, id.toString(), `${fileName.replace(/\.pdf$/, "")}.pdf`)
+
+  return filePath
+}

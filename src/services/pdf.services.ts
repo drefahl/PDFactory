@@ -1,4 +1,6 @@
+import { readFile } from "node:fs/promises"
 import { ValidationError } from "@/errors/ValidationError"
+import { getPdfPath } from "@/lib/utils/file.utils"
 import { isValidHtml } from "@/lib/utils/html.utils"
 import { type Browser, type PDFOptions, launch } from "puppeteer"
 import z from "zod"
@@ -63,6 +65,18 @@ export class PdfService {
   async close() {
     if (this.browser) {
       await this.browser.close()
+    }
+  }
+
+  async getPdf(fileName: string, userId: number) {
+    const filePath = await getPdfPath(userId, fileName)
+
+    try {
+      const pdf = await readFile(filePath)
+
+      return pdf
+    } catch (error) {
+      return null
     }
   }
 }

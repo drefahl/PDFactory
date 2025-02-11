@@ -11,3 +11,12 @@ export const GeneratePdfFromUrlSchema = z.object({
 })
 
 export type GeneratePdfFromUrl = z.infer<typeof GeneratePdfFromUrlSchema>
+
+export const GetPdfSchema = z.object({
+  fileName: z
+    .string()
+    .trim()
+    .transform((val) => (val.endsWith(".pdf") ? val : `${val}.pdf`)),
+})
+
+export type GetPdf = z.infer<typeof GetPdfSchema>
