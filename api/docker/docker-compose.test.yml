@@ -1,0 +1,24 @@
+services:
+  redis-test:
+    image: redis:7-alpine
+    container_name: redis-test
+    restart: no
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: redis-server
+    volumes: 
+      - cache_test:/data 
+
+  postgres-test:
+    image: postgres:17-alpine
+    container_name: postgres-test
+    env_file:
+      - ../.env.test
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_test:
+  cache_test:
