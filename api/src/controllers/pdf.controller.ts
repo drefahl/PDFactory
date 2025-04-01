@@ -1,5 +1,4 @@
 import { ValidationError } from "@/errors/ValidationError"
-import { savePdf } from "@/lib/utils/file.utils"
 import type { GenerateAsyncPdfFromUrl, GetPdf } from "@/schemas/pdf.schema"
 import type { PdfService } from "@/services/pdf.service"
 import { QueueService } from "@/services/queue.service"
@@ -14,10 +13,7 @@ export class PdfController {
     this.queueService.startWorker()
   }
 
-  async generatePdfByHTML(
-    request: FastifyRequest<{ Querystring: { options?: PDFOptions; name?: string } }>,
-    reply: FastifyReply,
-  ) {
+  async generatePdfByHTML(request: FastifyRequest<{ Querystring: { options?: PDFOptions } }>, reply: FastifyReply) {
     try {
       const data = await request.file()
       if (!data) {
@@ -35,9 +31,12 @@ export class PdfController {
 
       const { user } = request
 
-      const { options, name } = request.query
-      const pdf = await this.pdfService.generatePdfFromHtml(html, options)
-      const { fileName } = await savePdf(pdf, user.id, name)
+      const { options } = request.query
+      const { pdf, fileName } = await this.pdfService.generatePdfFromHtml({
+        html,
+        userId: user.id,
+        options,
+      })
 
       return reply
         .header("Content-Type", "application/pdf")
@@ -53,12 +52,11 @@ export class PdfController {
   }
 
   async generatePdfByUrl(request: FastifyRequest, reply: FastifyReply) {
-    const { url, options, name } = request.body as { url: string; options?: PDFOptions; name?: string }
+    const { url, options } = request.body as { url: string; options?: PDFOptions }
 
     const { user } = request
 
-    const pdf = await this.pdfService.generatePdfFromUrl(url, options)
-    const { fileName } = await savePdf(pdf, user.id, name)
+    const { pdf, fileName } = await this.pdfService.generatePdfFromUrl({ url, userId: user.id, options })
 
     return reply
       .header("Content-Type", "application/pdf")
@@ -82,48 +80,79 @@ export class PdfController {
   }
 
   async generatePdfByHTMLAsync(
-    request: FastifyRequest<{ Querystring: { options?: PDFOptions; name?: string } }>,
+    request: FastifyRequest<{ Querystring: { options?: PDFOptions } }>,
     reply: FastifyReply,
   ) {
-    const data = await request.file()
-    if (!data) {
-      return reply.code(400).send({ message: "File is required" })
-    }
+    const data = await request.saveRequestFiles({ limits: { files: 5 } })
 
-    if (data.mimetype !== "text/html") {
-      return reply.code(400).send({ message: "Only HTML files are allowed" })
-    }
-
-    const html = (await data.toBuffer()).toString()
-    if (!html) {
-      return reply.code(400).send({ message: "HTML content is required" })
+    if (!data.length) {
+      return reply.code(400).send({ message: "No files provided" })
     }
 
     const { user } = request
-    const { options, name } = request.query
+    const { options } = request.query
 
-    const job = await this.queueService.addPdfJob({
-      type: "html",
-      payload: { html, options, userId: user.id, name },
+    const jobIds: string[] = []
+    const errors: string[] = []
+
+    for (const file of data) {
+      if (file.mimetype !== "text/html") {
+        errors.push("Only HTML files are allowed")
+        continue
+      } //TODO: Implement this
+
+      const html = (await file.toBuffer()).toString()
+      if (!html) {
+        errors.push("HTML content is required")
+        continue
+      }
+
+      try {
+        const job = await this.queueService.addPdfJob({
+          type: "html",
+          userId: user.id,
+          payload: { html, options },
+        })
+
+        if (job?.id) jobIds.push(job.id)
+        else errors.push("Job not created")
+      } catch (error) {
+        if (error instanceof Error) errors.push(`Error processing file: ${error.message}`)
+        else errors.push("Error processing file")
+      }
+    }
+
+    return reply.code(202).send({
+      message: "Partial queueing",
+      jobIds,
+      errors,
     })
-
-    return reply.code(202).send({ message: "Job enfileirado", jobId: job.id })
   }
 
   async generatePdfByUrlAsync(request: FastifyRequest<{ Body: GenerateAsyncPdfFromUrl }>, reply: FastifyReply) {
-    const { urls } = request.body
+    const { urls, options } = request.body
     const { user } = request
 
-    const jons = await Promise.all(
-      urls.map(async ({ url, options, name }) => {
-        return await this.queueService.addPdfJob({
-          type: "url",
-          payload: { url, options, userId: user.id, name },
-        })
-      }),
-    )
+    const jobIds: string[] = []
+    const errors: string[] = []
 
-    return reply.code(202).send({ message: "Job enfileirado", jobIds: jons.map((job) => job.id) })
+    for (const { url } of urls) {
+      try {
+        const job = await this.queueService.addPdfJob({
+          type: "url",
+          userId: user.id,
+          payload: { url, options },
+        })
+
+        if (job?.id) jobIds.push(job.id)
+        else errors.push("Job not created")
+      } catch (error) {
+        if (error instanceof Error) errors.push(`Error processing URL: ${error.message}`)
+        else errors.push("Error processing URL")
+      }
+    }
+
+    return reply.code(202).send({ message: "Partial queueing", jobIds, errors })
   }
 
   async getWorkerStatus(request: FastifyRequest, reply: FastifyReply) {

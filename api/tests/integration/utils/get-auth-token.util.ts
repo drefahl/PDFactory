@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto"
+import { JobService } from "@/services/job.service"
+import type { Prisma } from "@prisma/client"
 import type { FastifyInstance } from "fastify"
 import request from "supertest"
+
+import { mockConstants } from "tests/mocks"
+const {
+  pdf: { htmlContent, url },
+} = mockConstants
 
 export async function getAuthToken(app: FastifyInstance) {
   const { id, email, password } = await registerUser(app)
@@ -28,4 +35,10 @@ export async function registerUser(app: FastifyInstance) {
   if (registerRes.status !== 201) throw new Error("Error registering user")
 
   return { id: registerRes.body.id, email, password }
+}
+
+export async function createJob(jobData: Prisma.JobCreateInput) {
+  const jobService = new JobService()
+
+  return jobService.createJob(jobData)
 }

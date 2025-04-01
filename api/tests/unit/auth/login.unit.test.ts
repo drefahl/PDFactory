@@ -1,35 +1,21 @@
 import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError"
-import { hashPassword } from "@/lib/utils/crypto.utils"
 import { verifyToken } from "@/lib/utils/jwt.utils"
-import { UserRepository } from "@/repositories/user.repository"
-import { AuthService } from "@/services/auth.service"
+import { createAuthServiceMock, mockConstants } from "tests/mocks"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-let authService: AuthService
-let userRepository: UserRepository
+const {
+  user: { email, password },
+} = mockConstants
+
+const authService = createAuthServiceMock()
 
 describe("Login", () => {
   beforeEach(() => {
-    userRepository = new UserRepository()
-    vi.spyOn(userRepository, "getUserByEmail").mockImplementation(async (email) => {
-      if (email !== "teste@example.com") return null
-
-      return {
-        id: "user_123",
-        name: "Test User",
-        email: "teste@example.com",
-        password: await hashPassword("admin"),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        jobs: [],
-      }
-    })
-
-    authService = new AuthService(userRepository)
+    vi.clearAllMocks()
   })
 
   it("should login with valid credentials and return a valid token", async () => {
-    const token = await authService.login("teste@example.com", "admin")
+    const token = await authService.login(email, password)
 
     expect(token).toBeDefined()
 
@@ -40,6 +26,6 @@ describe("Login", () => {
   })
 
   it("should throw an error with invalid credentials", async () => {
-    await expect(authService.login("admin", "invalid-password")).rejects.toThrow(InvalidCredentialsError)
+    await expect(authService.login(email, "invalid-password")).rejects.toThrow(InvalidCredentialsError)
   })
 })

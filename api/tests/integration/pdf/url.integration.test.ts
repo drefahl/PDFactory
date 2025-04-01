@@ -30,31 +30,30 @@ describe("PDF URL Integration Tests", () => {
     }
   })
 
-  it(
-    "should generate PDF from a valid URL",
-    async () => {
-      const response = await request(app.server)
-        .post("/api/pdf/sync/url")
-        .set("Authorization", `Bearer ${authToken}`)
-        .set("Content-Type", "application/json")
-        .send({ url: "https://www.google.com/", name: "example" })
+  it("should generate PDF from a valid URL", { timeout: 10000 }, async () => {
+    const response = await request(app.server)
+      .post("/api/pdf/sync/url")
+      .set("Authorization", `Bearer ${authToken}`)
+      .set("Content-Type", "application/json")
+      .send({ url: "https://www.google.com/" })
 
-      expect(response.status).toBe(200)
-      expect(response.headers["content-type"]).toBe("application/pdf")
+    expect(response.status).toBe(200)
+    expect(response.headers["content-type"]).toBe("application/pdf")
+    expect(response.headers["content-disposition"]).toContain("attachment")
 
-      const filePath = path.join(process.cwd(), "tmp", userId, "example.pdf")
+    const fileName = response.headers["content-disposition"].split("filename=")[1]
 
-      expect(fs.existsSync(filePath)).toBe(true)
-    },
-    { timeout: 10000 },
-  )
+    const filePath = path.join(process.cwd(), "tmp", userId, fileName)
+
+    expect(fs.existsSync(filePath)).toBe(true)
+  })
 
   it("should return 400 when URL is missing", async () => {
     const response = await request(app.server)
       .post("/api/pdf/sync/url")
       .set("Authorization", `Bearer ${authToken}`)
       .set("Content-Type", "application/json")
-      .send({ name: "example" })
+      .send({})
 
     expect(response.status).toBe(400)
     expect(response.body.details.issues[0].message).toBe("URL is required")
@@ -65,7 +64,7 @@ describe("PDF URL Integration Tests", () => {
       .post("/api/pdf/sync/url")
       .set("Authorization", `Bearer ${authToken}`)
       .set("Content-Type", "application/json")
-      .send({ url: "invalid-url", name: "example" })
+      .send({ url: "invalid-url" })
 
     expect(response.status).toBe(400)
     expect(response.body.details.issues[0].message).toContain("Invalid URL")
@@ -75,7 +74,7 @@ describe("PDF URL Integration Tests", () => {
     const response = await request(app.server)
       .post("/api/pdf/sync/url")
       .set("Content-Type", "application/json")
-      .send({ url: "https://www.google.com/", name: "example" })
+      .send({ url: "https://www.google.com/" })
 
     expect(response.status).toBe(401)
     expect(response.body.message).toBe("Unauthorized")

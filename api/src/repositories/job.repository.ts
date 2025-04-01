@@ -1,24 +1,28 @@
 import { prisma } from "@/lib/prisma"
-import type { Job, JobStatus, Prisma } from "@prisma/client"
+import type { Job, Prisma } from "@prisma/client"
 
 export class JobRepository {
   async createJob(data: Prisma.JobCreateInput): Promise<Job> {
     return prisma.job.create({ data })
   }
 
-  async getJobById(jobId: string): Promise<Job | null> {
-    return prisma.job.findUnique({ where: { id: jobId }, include: { user: true } })
+  async getJobById(id: string): Promise<Job | null> {
+    return prisma.job.findUnique({ where: { id: id } })
   }
 
-  async listJobs(): Promise<Job[]> {
-    return prisma.job.findMany({ include: { user: true } })
+  async getJobByQueueJobId(queueJobId: string): Promise<Job | null> {
+    return prisma.job.findUnique({ where: { queueJobId } })
   }
 
-  async updateJobStatus(jobId: string, status: JobStatus): Promise<Job> {
-    return prisma.job.update({ where: { id: jobId }, data: { status } })
+  async listJobsByUserId(userId: string): Promise<Job[]> {
+    return prisma.job.findMany({ where: { userId } })
   }
 
-  async deleteJob(jobId: string): Promise<Job> {
-    return prisma.job.delete({ where: { id: jobId } })
+  async updateJob(id: string, data: Prisma.JobUpdateInput): Promise<Job> {
+    return prisma.job.update({ where: { id: id }, data })
+  }
+
+  async deleteJob(id: string): Promise<Job> {
+    return prisma.job.delete({ where: { id: id } })
   }
 }

@@ -6,10 +6,7 @@ const secret = new TextEncoder().encode(env.JWT_SECRET)
 type TokenPayload = { id: string; email: string }
 
 export async function createToken(payload: TokenPayload) {
-  const jwt = await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(env.NODE_ENV === "development" ? "1h" : "1d")
-    .sign(secret)
+  const jwt = await new SignJWT(payload).setProtectedHeader({ alg: "HS256" }).setExpirationTime("7d").sign(secret)
 
   return jwt
 }

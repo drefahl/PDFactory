@@ -27,6 +27,12 @@
       "correctness": {
         "useExhaustiveDependencies": "off",
         "noUnusedImports": "error"
+      },
+      "style": {
+        "noUnusedTemplateLiteral": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn"
       }
     }
   },

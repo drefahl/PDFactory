@@ -6,8 +6,18 @@ export class UserRepository {
     return prisma.user.create({ data })
   }
 
-  async getUserById(userId: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { id: userId }, include: { jobs: true } })
+  async getUserById(userId: string): Promise<Omit<User, "password"> | null> {
+    return prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        password: false,
+      },
+    })
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

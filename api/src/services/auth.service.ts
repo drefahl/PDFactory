@@ -1,13 +1,13 @@
 import { InvalidCredentialsError } from "@/errors/InvalidCredentialsError"
 import { createToken } from "@/lib/utils/jwt.utils"
-import { UserRepository } from "@/repositories/user.repository"
 import { comparePassword } from "../lib/utils/crypto.utils"
+import { UserService } from "./user.service"
 
 export class AuthService {
-  constructor(private readonly userRepository: UserRepository = new UserRepository()) {}
+  constructor(private readonly userService: UserService = new UserService()) {}
 
   async login(email: string, password: string) {
-    const user = await this.userRepository.getUserByEmail(email)
+    const user = await this.userService.getUserByEmail(email)
     if (!user) {
       throw new InvalidCredentialsError("Invalid credentials")
     }

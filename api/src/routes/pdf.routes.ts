@@ -1,6 +1,8 @@
 import { PdfController } from "@/controllers/pdf.controller"
+import { messageSchema } from "@/schemas/common.schema"
 import {
   GenerateAsyncPdfFromUrlSchema,
+  GenerateAsyncPdfResponseSchema,
   GeneratePdfFromUrlSchema,
   GetPdfSchema,
   QueryStringPdfFromHtmlSchema,
@@ -9,13 +11,16 @@ import { PdfService } from "@/services/pdf.service"
 import type { FastifyInstance } from "fastify"
 
 export async function pdfRoutes(app: FastifyInstance) {
-  const pdfService = new PdfService()
+  const pdfService = await PdfService.create()
   const pdfController = new PdfController(pdfService)
 
   app.post(
     "/sync/html",
     {
       schema: {
+        tags: ["PDF"],
+        operationId: "generatePdfByHTML",
+        description: "Generate PDF from HTML",
         consumes: ["multipart/form-data"],
         querystring: QueryStringPdfFromHtmlSchema,
       },
@@ -27,6 +32,9 @@ export async function pdfRoutes(app: FastifyInstance) {
     "/sync/url",
     {
       schema: {
+        tags: ["PDF"],
+        operationId: "generatePdfByUrl",
+        description: "Generate PDF from URL",
         consumes: ["application/json"],
         body: GeneratePdfFromUrlSchema,
       },
@@ -38,6 +46,9 @@ export async function pdfRoutes(app: FastifyInstance) {
     "/:fileName",
     {
       schema: {
+        tags: ["PDF"],
+        operationId: "getPdf",
+        description: "Get PDF by file name",
         params: GetPdfSchema,
       },
     },
@@ -48,8 +59,16 @@ export async function pdfRoutes(app: FastifyInstance) {
     "/async/html",
     {
       schema: {
+        tags: ["PDF"],
+        operationId: "generatePdfByHTMLAsync",
+        description: "Generate PDF from HTML asynchronously",
         consumes: ["multipart/form-data"],
         querystring: QueryStringPdfFromHtmlSchema,
+        response: {
+          202: GenerateAsyncPdfResponseSchema,
+          400: messageSchema,
+          500: messageSchema,
+        },
       },
     },
     pdfController.generatePdfByHTMLAsync.bind(pdfController),
@@ -59,8 +78,15 @@ export async function pdfRoutes(app: FastifyInstance) {
     "/async/url",
     {
       schema: {
+        tags: ["PDF"],
+        operationId: "generatePdfByUrlAsync",
+        description: "Generate PDF from URL asynchronously",
         consumes: ["application/json"],
         body: GenerateAsyncPdfFromUrlSchema,
+        response: {
+          202: GenerateAsyncPdfResponseSchema,
+          500: messageSchema,
+        },
       },
     },
     pdfController.generatePdfByUrlAsync.bind(pdfController),
@@ -69,7 +95,11 @@ export async function pdfRoutes(app: FastifyInstance) {
   app.get(
     "/queue-status",
     {
-      schema: {},
+      schema: {
+        tags: ["PDF"],
+        operationId: "getQueueStatus",
+        description: "Get queue status",
+      },
     },
     pdfController.getWorkerStatus.bind(pdfController),
   )

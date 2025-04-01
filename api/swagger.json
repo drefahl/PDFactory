@@ -10,6 +10,11 @@
   "paths": {
     "/api/health": {
       "get": {
+        "operationId": "healthCheck",
+        "tags": [
+          "Health"
+        ],
+        "description": "Health check endpoint",
         "responses": {
           "200": {
             "description": "Default Response"
@@ -19,21 +24,26 @@
     },
     "/api/auth/login": {
       "post": {
+        "operationId": "login",
+        "tags": [
+          "Auth"
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "username": {
-                    "type": "string"
+                  "email": {
+                    "type": "string",
+                    "format": "email"
                   },
                   "password": {
                     "type": "string"
                   }
                 },
                 "required": [
-                  "username",
+                  "email",
                   "password"
                 ],
                 "additionalProperties": false
@@ -84,21 +94,425 @@
         }
       }
     },
-    "/api/pdf/sync/html": {
+    "/api/users/": {
       "post": {
-        "parameters": [
-          {
-            "schema": {},
-            "in": "query",
-            "name": "options",
-            "required": false
+        "operationId": "createUser",
+        "tags": [
+          "User"
+        ],
+        "description": "Create a new user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                },
+                "required": [
+                  "email",
+                  "name",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
           },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/jobs/{id}": {
+      "get": {
+        "operationId": "getJobById",
+        "tags": [
+          "Job"
+        ],
+        "description": "Get a job by id",
+        "parameters": [
           {
             "schema": {
               "type": "string"
             },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "queueJobId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "htmlContent": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pdfPath": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "COMPLETED",
+                        "FAILED"
+                      ]
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "SYNC",
+                        "ASYNC"
+                      ]
+                    },
+                    "finishedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "userId",
+                    "queueJobId",
+                    "htmlContent",
+                    "url",
+                    "pdfPath",
+                    "status",
+                    "mode",
+                    "finishedAt",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteJob",
+        "tags": [
+          "Job"
+        ],
+        "description": "Delete a job by id",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "queueJobId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "htmlContent": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pdfPath": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "COMPLETED",
+                        "FAILED"
+                      ]
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "SYNC",
+                        "ASYNC"
+                      ]
+                    },
+                    "finishedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "userId",
+                    "queueJobId",
+                    "htmlContent",
+                    "url",
+                    "pdfPath",
+                    "status",
+                    "mode",
+                    "finishedAt",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/": {
+      "get": {
+        "operationId": "listJobs",
+        "tags": [
+          "Job"
+        ],
+        "description": "List all jobs",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "queueJobId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "htmlContent": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "url": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "pdfPath": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "PENDING",
+                          "PROCESSING",
+                          "COMPLETED",
+                          "FAILED"
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "SYNC",
+                          "ASYNC"
+                        ]
+                      },
+                      "finishedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "userId",
+                      "queueJobId",
+                      "htmlContent",
+                      "url",
+                      "pdfPath",
+                      "status",
+                      "mode",
+                      "finishedAt",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdf/sync/html": {
+      "post": {
+        "operationId": "generatePdfByHTML",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Generate PDF from HTML",
+        "parameters": [
+          {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "scale": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 2
+                },
+                "displayHeaderFooter": {
+                  "type": "boolean"
+                },
+                "headerTemplate": {
+                  "type": "string"
+                },
+                "footerTemplate": {
+                  "type": "string"
+                },
+                "printBackground": {
+                  "type": "boolean"
+                },
+                "landscape": {
+                  "type": "boolean"
+                },
+                "pageRanges": {
+                  "type": "string"
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "Letter",
+                    "Legal",
+                    "Tabloid",
+                    "Ledger",
+                    "A0",
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5",
+                    "A6"
+                  ]
+                },
+                "width": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                },
+                "height": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                },
+                "margin": {
+                  "type": "object",
+                  "properties": {
+                    "top": {
+                      "type": "string"
+                    },
+                    "right": {
+                      "type": "string"
+                    },
+                    "bottom": {
+                      "type": "string"
+                    },
+                    "left": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "preferCSSPageSize": {
+                  "type": "boolean"
+                },
+                "omitBackground": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
             "in": "query",
-            "name": "name",
+            "name": "options",
             "required": false
           }
         ],
@@ -111,6 +525,11 @@
     },
     "/api/pdf/sync/url": {
       "post": {
+        "operationId": "generatePdfByUrl",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Generate PDF from URL",
         "requestBody": {
           "content": {
             "application/json": {
@@ -123,11 +542,83 @@
                   },
                   "options": {
                     "type": "object",
-                    "properties": {},
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "scale": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 2
+                      },
+                      "displayHeaderFooter": {
+                        "type": "boolean"
+                      },
+                      "headerTemplate": {
+                        "type": "string"
+                      },
+                      "footerTemplate": {
+                        "type": "string"
+                      },
+                      "printBackground": {
+                        "type": "boolean"
+                      },
+                      "landscape": {
+                        "type": "boolean"
+                      },
+                      "pageRanges": {
+                        "type": "string"
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "Letter",
+                          "Legal",
+                          "Tabloid",
+                          "Ledger",
+                          "A0",
+                          "A1",
+                          "A2",
+                          "A3",
+                          "A4",
+                          "A5",
+                          "A6"
+                        ]
+                      },
+                      "width": {
+                        "type": "string",
+                        "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                      },
+                      "height": {
+                        "type": "string",
+                        "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                      },
+                      "margin": {
+                        "type": "object",
+                        "properties": {
+                          "top": {
+                            "type": "string"
+                          },
+                          "right": {
+                            "type": "string"
+                          },
+                          "bottom": {
+                            "type": "string"
+                          },
+                          "left": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "preferCSSPageSize": {
+                        "type": "boolean"
+                      },
+                      "omitBackground": {
+                        "type": "boolean"
+                      }
+                    },
                     "additionalProperties": false
-                  },
-                  "name": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -148,6 +639,11 @@
     },
     "/api/pdf/{fileName}": {
       "get": {
+        "operationId": "getPdf",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Get PDF by file name",
         "parameters": [
           {
             "schema": {
@@ -167,31 +663,180 @@
     },
     "/api/pdf/async/html": {
       "post": {
+        "operationId": "generatePdfByHTMLAsync",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Generate PDF from HTML asynchronously",
         "parameters": [
           {
-            "schema": {},
-            "in": "query",
-            "name": "options",
-            "required": false
-          },
-          {
             "schema": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "scale": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 2
+                },
+                "displayHeaderFooter": {
+                  "type": "boolean"
+                },
+                "headerTemplate": {
+                  "type": "string"
+                },
+                "footerTemplate": {
+                  "type": "string"
+                },
+                "printBackground": {
+                  "type": "boolean"
+                },
+                "landscape": {
+                  "type": "boolean"
+                },
+                "pageRanges": {
+                  "type": "string"
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "Letter",
+                    "Legal",
+                    "Tabloid",
+                    "Ledger",
+                    "A0",
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5",
+                    "A6"
+                  ]
+                },
+                "width": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                },
+                "height": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                },
+                "margin": {
+                  "type": "object",
+                  "properties": {
+                    "top": {
+                      "type": "string"
+                    },
+                    "right": {
+                      "type": "string"
+                    },
+                    "bottom": {
+                      "type": "string"
+                    },
+                    "left": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "preferCSSPageSize": {
+                  "type": "boolean"
+                },
+                "omitBackground": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
             },
             "in": "query",
-            "name": "name",
+            "name": "options",
             "required": false
           }
         ],
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "jobIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "jobIds",
+                    "errors"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/pdf/async/url": {
       "post": {
+        "operationId": "generatePdfByUrlAsync",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Generate PDF from URL asynchronously",
         "requestBody": {
           "content": {
             "application/json": {
@@ -206,14 +851,6 @@
                         "url": {
                           "type": "string",
                           "format": "uri"
-                        },
-                        "options": {
-                          "type": "object",
-                          "properties": {},
-                          "additionalProperties": false
-                        },
-                        "name": {
-                          "type": "string"
                         }
                       },
                       "required": [
@@ -223,6 +860,86 @@
                     },
                     "minItems": 1,
                     "maxItems": 10
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "scale": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 2
+                      },
+                      "displayHeaderFooter": {
+                        "type": "boolean"
+                      },
+                      "headerTemplate": {
+                        "type": "string"
+                      },
+                      "footerTemplate": {
+                        "type": "string"
+                      },
+                      "printBackground": {
+                        "type": "boolean"
+                      },
+                      "landscape": {
+                        "type": "boolean"
+                      },
+                      "pageRanges": {
+                        "type": "string"
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "Letter",
+                          "Legal",
+                          "Tabloid",
+                          "Ledger",
+                          "A0",
+                          "A1",
+                          "A2",
+                          "A3",
+                          "A4",
+                          "A5",
+                          "A6"
+                        ]
+                      },
+                      "width": {
+                        "type": "string",
+                        "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                      },
+                      "height": {
+                        "type": "string",
+                        "pattern": "^\\d+(\\.\\d+)?(mm|cm|in|px)$"
+                      },
+                      "margin": {
+                        "type": "object",
+                        "properties": {
+                          "top": {
+                            "type": "string"
+                          },
+                          "right": {
+                            "type": "string"
+                          },
+                          "bottom": {
+                            "type": "string"
+                          },
+                          "left": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "preferCSSPageSize": {
+                        "type": "boolean"
+                      },
+                      "omitBackground": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -235,17 +952,186 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Default Response"
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "jobIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "jobIds",
+                    "errors"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/pdf/queue-status": {
       "get": {
+        "operationId": "getQueueStatus",
+        "tags": [
+          "PDF"
+        ],
+        "description": "Get queue status",
         "responses": {
           "200": {
             "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "operationId": "getUserProfile",
+        "tags": [
+          "User"
+        ],
+        "description": "Get user profile",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false,
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateUserProfile",
+        "tags": [
+          "User"
+        ],
+        "description": "Update user profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false,
+                  "nullable": true
+                }
+              }
+            }
           }
         }
       }

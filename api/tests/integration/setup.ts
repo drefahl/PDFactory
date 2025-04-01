@@ -9,19 +9,18 @@ const projectRoot = path.resolve(__dirname, "../../")
 const env = config({ path: path.join(projectRoot, ".env.test"), override: true })
 dotenvExpand.expand(env)
 
-import { prisma } from "@/lib/prisma"
-
 const schema = randomUUID()
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL not defined")
 
 const url = new URL(process.env.DATABASE_URL)
 url.searchParams.set("schema", schema)
-const DATABASE_URL = url.toString()
+process.env.DATABASE_URL = url.toString()
+
+import { prisma } from "@/lib/prisma"
 
 beforeAll(async () => {
   try {
     execSync("npx prisma db push --schema=prisma/schema.prisma --force-reset", {
-      env: { ...process.env, DATABASE_URL },
       cwd: projectRoot,
     })
   } catch (error) {

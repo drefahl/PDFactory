@@ -7,11 +7,21 @@ export async function publicRoutes(app: FastifyInstance) {
 
   app.register(userPublicRoutes, { prefix: "/users" })
 
-  app.get("/health", (request, reply) => {
-    reply.send({
-      status: "ok",
-      time: new Date().toISOString(),
-      uptime: process.uptime(),
-    })
-  })
+  app.get(
+    "/health",
+    {
+      schema: {
+        tags: ["Health"],
+        operationId: "healthCheck",
+        description: "Health check endpoint",
+      },
+    },
+    (request, reply) => {
+      reply.send({
+        status: "ok",
+        time: new Date().toISOString(),
+        uptime: process.uptime(),
+      })
+    },
+  )
 }

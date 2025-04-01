@@ -1,9 +1,14 @@
 import { createServer } from "@/app"
-import type { CreateJobInput, UpdateStatusJobInput } from "@/schemas/job.schema"
+import type { UpdateStatusJobInput } from "@/schemas/job.schema"
 import type { FastifyInstance } from "fastify"
 import request from "supertest"
+import { mockConstants } from "tests/mocks"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { getAuthToken } from "../utils/get-auth-token.util"
+import { createJob, getAuthToken } from "../utils/get-auth-token.util"
+
+const {
+  pdf: { htmlContent, url },
+} = mockConstants
 
 let app: FastifyInstance
 let authToken: string
@@ -17,43 +22,13 @@ describe("Job API Integration Tests", () => {
     const data = await getAuthToken(app)
     authToken = data.token
     userId = data.userId
+
+    const jobData = await createJob({ user: { connect: { id: userId } }, htmlContent, url, mode: "ASYNC" })
+    createdJobId = jobData.id
   })
 
   afterAll(async () => {
     await app.close()
-  })
-
-  it("should create a job with valid HTML data", async () => {
-    const jobData: CreateJobInput = {
-      user: { connect: { id: userId } },
-      htmlContent: "<html><body><h1>Job Test</h1></body></html>",
-    }
-
-    const response = await request(app.server)
-      .post("/api/jobs")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send(jobData)
-
-    expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty("id")
-    expect(response.body.status).toBe("PENDING")
-
-    createdJobId = response.body.id
-  })
-
-  it("should create a job with valid URL data", async () => {
-    const jobData: CreateJobInput = {
-      user: { connect: { id: userId } },
-      url: "https://example.com",
-    }
-
-    const response = await request(app.server)
-      .post("/api/jobs")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send(jobData)
-
-    expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty("id")
   })
 
   it("should get job by id", async () => {

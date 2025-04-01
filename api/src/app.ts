@@ -1,3 +1,4 @@
+import { fastifyCors } from "@fastify/cors"
 import fastifyJwt from "@fastify/jwt"
 import { fastifyMultipart } from "@fastify/multipart"
 import { fastify } from "fastify"
@@ -21,6 +22,7 @@ export async function createServer() {
   swaggerConfig(app)
   app.register(fastifyMultipart)
   app.register(fastifyJwt, { secret: env.JWT_SECRET, sign: { algorithm: "HS256" } })
+  app.register(fastifyCors, { origin: "*" })
 
   // Error Handling
   app.setErrorHandler(errorHandler)

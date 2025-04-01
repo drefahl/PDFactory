@@ -33,21 +33,22 @@ describe("PDF API Integration Tests", () => {
 
   describe("POST /api/pdf/sync/html", () => {
     it("should generate PDF from valid HTML file when authenticated", async () => {
-      const customName = "test-custom"
       const htmlContent = "<html><body><h1>Hello, PDF!</h1></body></html>"
       const htmlBuffer = Buffer.from(htmlContent, "utf-8")
 
       const response = await request(app.server)
         .post("/api/pdf/sync/html")
         .set("Authorization", `Bearer ${authToken}`)
-        .query({ name: customName })
         .attach("file", htmlBuffer, { filename: "test.html", contentType: "text/html" })
 
       expect(response.status).toBe(200)
       expect(response.headers["content-type"]).toBe("application/pdf")
+      expect(response.headers["content-disposition"]).toContain("attachment")
+
+      const fileName = response.headers["content-disposition"].split("filename=")[1]
 
       const projectRoot = process.cwd()
-      const tempFilePath = path.join(projectRoot, "tmp", userId, `${customName}.pdf`)
+      const tempFilePath = path.join(projectRoot, "tmp", userId, fileName)
 
       expect(fs.existsSync(tempFilePath)).toBe(true)
     })
@@ -91,13 +92,11 @@ describe("PDF API Integration Tests", () => {
     })
 
     it("should return 401 when not authenticated", async () => {
-      const customName = "test-no-auth"
       const htmlContent = "<html><body><h1>Hello, PDF!</h1></body></html>"
       const htmlBuffer = Buffer.from(htmlContent, "utf-8")
 
       const response = await request(app.server)
         .post("/api/pdf/sync/html")
-        .query({ name: customName })
         .attach("file", htmlBuffer, { filename: "test.html", contentType: "text/html" })
 
       expect(response.status).toBe(401)

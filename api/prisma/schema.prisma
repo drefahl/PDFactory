@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -15,25 +14,32 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  jobs      Job[]    
+  jobs      Job[]
 }
 
 model Job {
   id          String    @id @default(cuid())
   user        User      @relation(fields: [userId], references: [id])
   userId      String
+  queueJobId  String?   @unique
   status      JobStatus @default(PENDING)
+  mode        JobMode
   htmlContent String?
-  url         String?    
-  pdfPath     String?   
+  url         String?
+  pdfPath     String?
+  finishedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
 enum JobStatus {
-  PENDING      
-  PROCESSING   
-  COMPLETED    
-  FAILED       
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
+enum JobMode {
+  SYNC
+  ASYNC
+}
